@@ -9,23 +9,23 @@ public class Endpoint : Endpoint<Request, Response>
     public Endpoint(ILogger<Endpoint> logger, IEmailService emailService, IConfiguration configuration)
     {
         _config = configuration;
-        logger.LogInformation("constructor injection works!");
+        //logger.LogInformation("constructor injection works!");
         _ = emailService.SendEmail();
     }
 
     public override void Configure()
     {
-        Verbs(Http.POST, Http.PUT, Http.PATCH);
+        Verbs(Http.GET, Http.POST, Http.PUT, Http.PATCH);
         Routes("admin/login");
         AllowAnonymous();
         Options(b => b.RequireCors(p => p.AllowAnyOrigin()));
         RequestBinder(new RequestBinder<Request>(BindingSource.JsonBody | BindingSource.QueryParams));
-        Description(
+        /*Description(
             b => b.Accepts<Request>("application/json")
                   .Produces<Response>(200, "application/json")
                   .Produces(400)
                   .Produces(403),
-            clearDefaults: true);
+            clearDefaults: true);*/
         Summary(
             s =>
             {

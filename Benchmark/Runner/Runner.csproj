@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
         <TieredPGO>true</TieredPGO>
+        <TargetFrameworks>net8.0;net6.0;net7.0</TargetFrameworks>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -24,7 +24,10 @@
 
     <ItemGroup>
         <PackageReference Include="BenchmarkDotNet" Version="0.13.9"/>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.13"/>
+
+        <PackageReference Condition="'$(TargetFramework)' == 'net6.0'" Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.24"/>
+        <PackageReference Condition="'$(TargetFramework)' == 'net7.0'" Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.13"/>
+        <PackageReference Condition="'$(TargetFramework)' == 'net8.0'" Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0-rc*"/>
     </ItemGroup>
 
     <ItemGroup>

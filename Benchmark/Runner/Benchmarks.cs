@@ -3,10 +3,14 @@ using BenchmarkDotNet.Attributes;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Text;
 using System.Text.Json;
+using BenchmarkDotNet.Jobs;
 
 namespace Runner;
 
-[MemoryDiagnoser, SimpleJob(launchCount: 1, warmupCount: 1, iterationCount: 10, invocationCount: 10000)]
+[MemoryDiagnoser,
+ SimpleJob(RuntimeMoniker.Net60, launchCount: 1, warmupCount: 1, iterationCount: 10, invocationCount: 10000),
+ SimpleJob(RuntimeMoniker.Net70, launchCount: 1, warmupCount: 1, iterationCount: 10, invocationCount: 10000),
+ SimpleJob(RuntimeMoniker.Net80, launchCount: 1, warmupCount: 1, iterationCount: 10, invocationCount: 10000)]
 public class Benchmarks
 {
     const string QueryObjectParams = "?id=101&FirstName=Name&LastName=LastName&Age=23&phoneNumbers[0]=223422&phonenumbers[1]=11144" +
@@ -17,6 +21,7 @@ public class Benchmarks
     static HttpClient FastEndpointClient { get; } = new WebApplicationFactory<FEBench.Program>().CreateClient();
     static HttpClient FeCodeGenClient { get; } = new WebApplicationFactory<FEBench.Program>().CreateClient();
     static HttpClient FeScopedValidatorClient { get; } = new WebApplicationFactory<FEBench.Program>().CreateClient();
+    static HttpClient TokenGenClient { get; } = new WebApplicationFactory<FEBench.Program>().CreateClient();
     static HttpClient FeThrottleClient { get; } = new WebApplicationFactory<FEBench.Program>().CreateClient();
     static HttpClient MinimalClient { get; } = new WebApplicationFactory<MinimalApi.Program>().CreateClient();
     static HttpClient MvcClient { get; } = new WebApplicationFactory<MvcControllers.Program>().CreateClient();
@@ -45,14 +50,26 @@ public class Benchmarks
     {
         var msg = new HttpRequestMessage
         {
-            Method = HttpMethod.Post,
-            RequestUri = new($"{FastEndpointClient.BaseAddress}benchmark/ok/123"),
-            Content = _payload
+            Method = HttpMethod.Get,
+            RequestUri = new($"{FastEndpointClient.BaseAddress}empty-request"),
+            //Content = _payload
         };
 
         return FastEndpointClient.SendAsync(msg);
     }
 
+    [Benchmark(Description = "Token (New Handler)")]
+    public Task TokenBenchmark()
+    {
+        return TokenGenClient.SendAsync(
+            new HttpRequestMessage()
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri($"{TokenGenClient.BaseAddress}token-gen"),
+            });
+    }
+
+    /*
     [Benchmark]
     public Task MinimalApi()
     {
@@ -141,5 +158,5 @@ public class Benchmarks
         };
 
         return MvcClient.SendAsync(msg);
-    }
+    }*/
 }
