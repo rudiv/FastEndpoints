@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 
 namespace FastEndpoints;
 
@@ -186,6 +187,7 @@ sealed class EndpointData
                 var implementsConfigure = false;
                 var implementsHandleAsync = false;
                 var implementsExecuteAsync = false;
+                var implicitErrors = false;
 
                 foreach (var m in x.tEndpoint.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy))
                 {
@@ -197,17 +199,20 @@ sealed class EndpointData
                             break;
                         case nameof(Endpoint<object>.HandleAsync) when !m.IsDefined(Types.NotImplementedAttribute, false):
                             implementsHandleAsync = true;
+                            implicitErrors = MethodReturnsErrorsImplicitly(m);
 
                             break;
                         case nameof(Endpoint<object>.ExecuteAsync) when !m.IsDefined(Types.NotImplementedAttribute, false):
                             implementsExecuteAsync = true;
                             def.ExecuteAsyncImplemented = true;
+                            implicitErrors = MethodReturnsErrorsImplicitly(m);
 
                             break;
                     }
                 }
 
                 def.ImplementsConfigure = implementsConfigure;
+                def.ImplicitErrorSending = implicitErrors;
                 def.EndpointAttributes = x.tEndpoint.GetCustomAttributes(true);
                 var hasHttpAttrib = def.EndpointAttributes.Any(a => a is HttpAttribute);
 
@@ -244,6 +249,54 @@ sealed class EndpointData
 
                 return def;
             }).ToArray();
+    }
+
+    static bool MethodReturnsErrorsImplicitly(MethodInfo methodInfo)
+    {
+        // Handle|ExecuteAsync are async, obviously, so check for MoveNext as state machine impl
+        // Note it appears to generate the state machine even if not explicitly marked as async, weird
+        var attr = methodInfo.GetCustomAttribute<System.Runtime.CompilerServices.AsyncStateMachineAttribute>();
+        var moveNextMethod = attr?.StateMachineType.GetMethod("MoveNext", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (attr == null || moveNextMethod == null)
+        {
+            return false;
+        }
+
+        var il = moveNextMethod.GetMethodBody()?.GetILAsByteArray() ?? [];
+        if (il.Length == 0)
+        {
+            return false;
+        }
+        
+        // Perf, type safe getter
+        var module = moveNextMethod.Module;
+        // Perf, skip to user code
+        for (var i = 20; i < il.Length; i++)
+        {
+            // Find the method call and bounds check
+            if (il[i] == 0x28 && i + 4 < il.Length)
+            {
+                var metadataToken = BitConverter.ToInt32(il, i + 1);
+                try
+                {
+                    var calledMethod = module.ResolveMethod(metadataToken);
+                    if (calledMethod != null &&
+                        calledMethod.DeclaringType?.Namespace == nameof(FastEndpoints) &&
+                        calledMethod.Name is nameof(Endpoint<object>.ThrowIfAnyErrors)
+                                             or nameof(Endpoint<object>.ThrowError) or
+                                             "SendErrorsAsync")
+                    {
+                        return true;
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+                i += 4;
+            }
+        }
+        return false;
     }
 
     class ValDicItem(Type validatorType, bool dupesFound)

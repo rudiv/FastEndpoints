@@ -395,7 +395,7 @@ public static class MainExtensions
         if (ep.RequiresAuthorization())
             b.ProducesDeDuped(403, Types.Void, []);
 
-        if (Cfg.ErrOpts.ProducesMetadataType is not null && ep.ValidatorType is not null)
+        if (Cfg.ErrOpts.ProducesMetadataType is not null && (ep.ValidatorType is not null || ep.ImplicitErrorSending))
             b.ProducesDeDuped(Cfg.ErrOpts.StatusCode, Cfg.ErrOpts.ProducesMetadataType, [Cfg.ErrOpts.ContentType]);
     }
 

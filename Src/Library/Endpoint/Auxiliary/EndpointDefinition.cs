@@ -65,6 +65,7 @@ public sealed class EndpointDefinition(Type endpointType, Type requestDtoType, T
     internal bool FoundDuplicateValidators;
     internal HitCounter? HitCounter { get; private set; }
     internal bool ImplementsConfigure;
+    internal bool ImplicitErrorSending;
     internal bool IsLocked;
     internal readonly List<IProcessor> PreProcessorList = [];
     internal int PreProcessorPosition;
