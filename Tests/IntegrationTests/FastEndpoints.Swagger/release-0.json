@@ -1,5 +1,5 @@
 {
-  "x-generator": "NSwag v14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))",
+  "x-generator": "NSwag v14.3.0.0 (NJsonSchema v11.2.0.0 (Newtonsoft.Json v13.0.0.0))",
   "openapi": "3.0.0",
   "info": {
     "title": "Web API",
@@ -172,6 +172,16 @@
           "204": {
             "description": "No Content"
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -237,6 +247,16 @@
           "204": {
             "description": "No Content"
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -278,6 +298,16 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -343,6 +373,16 @@
           "204": {
             "description": "No Content"
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -366,6 +406,16 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -423,6 +473,16 @@
           "204": {
             "description": "No Content"
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -478,6 +538,16 @@
           "204": {
             "description": "No Content"
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -529,6 +599,16 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -595,6 +675,16 @@
           "204": {
             "description": "No Content"
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -636,6 +726,16 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -701,6 +801,16 @@
           "204": {
             "description": "No Content"
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -724,6 +834,16 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -780,6 +900,16 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -885,6 +1015,16 @@
           "204": {
             "description": "No Content"
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -940,6 +1080,16 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -4649,6 +4799,34 @@
         "type": "object",
         "additionalProperties": false
       },
+      "FastEndpointsErrorResponse": {
+        "type": "object",
+        "description": "the dto used to send an error response to the client",
+        "additionalProperties": false,
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "description": "the http status code sent to the client. default is 400.",
+            "format": "int32",
+            "default": 400
+          },
+          "message": {
+            "type": "string",
+            "description": "the message for the error response",
+            "default": "One or more errors occurred!"
+          },
+          "errors": {
+            "type": "object",
+            "description": "the collection of errors for the current context",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
       "CustomersCreateWithPropertiesDIRequest": {
         "type": "object",
         "additionalProperties": false
@@ -4772,34 +4950,6 @@
           },
           "generateFullUrl": {
             "type": "boolean"
-          }
-        }
-      },
-      "FastEndpointsErrorResponse": {
-        "type": "object",
-        "description": "the dto used to send an error response to the client",
-        "additionalProperties": false,
-        "properties": {
-          "statusCode": {
-            "type": "integer",
-            "description": "the http status code sent to the client. default is 400.",
-            "format": "int32",
-            "default": 400
-          },
-          "message": {
-            "type": "string",
-            "description": "the message for the error response",
-            "default": "One or more errors occurred!"
-          },
-          "errors": {
-            "type": "object",
-            "description": "the collection of errors for the current context",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
           }
         }
       },
@@ -6150,7 +6300,7 @@
       },
       "FastEndpointsProblemDetails": {
         "type": "object",
-        "description": "RFC7807 compatible problem details/ error response class. this can be used by configuring startup like so:\n\n    app.UseFastEndpoints(x => x.Errors.ResponseBuilder = ProblemDetails.ResponseBuilder);",
+        "description": "RFC7807 compatible problem details/ error response class. this can be used by configuring startup like so:\napp.UseFastEndpoints(c => c.Errors.UseProblemDetails())",
         "additionalProperties": false,
         "properties": {
           "type": {

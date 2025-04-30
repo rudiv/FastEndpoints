@@ -199,13 +199,15 @@ sealed class EndpointData
                             break;
                         case nameof(Endpoint<object>.HandleAsync) when !m.IsDefined(Types.NotImplementedAttribute, false):
                             implementsHandleAsync = true;
-                            implicitErrors = MethodReturnsErrorsImplicitly(m);
+                            if (opts.EnableReflectionImplicitErrorDetection)
+                                implicitErrors = MethodReturnsErrorsImplicitly(m);
 
                             break;
                         case nameof(Endpoint<object>.ExecuteAsync) when !m.IsDefined(Types.NotImplementedAttribute, false):
                             implementsExecuteAsync = true;
                             def.ExecuteAsyncImplemented = true;
-                            implicitErrors = MethodReturnsErrorsImplicitly(m);
+                            if (opts.EnableReflectionImplicitErrorDetection)
+                                implicitErrors = MethodReturnsErrorsImplicitly(m);
 
                             break;
                     }

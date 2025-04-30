@@ -93,6 +93,8 @@ public static class MainExtensions
         Cfg.SerOpts.Options.IgnoreToHeaderAttributes();
         Cfg.BndOpts.AddTypedHeaderValueParsers(Cfg.SerOpts.Options);
 
+        var inspectReflectionCache = Cfg.BndOpts.ReflectionCache.Count > 0;
+
         //https://github.com/FastEndpoints/FastEndpoints/issues/669
         if (Cfg.SerOpts.EnableJsonIgnoreAttributeOnRequiredProperties)
             Cfg.SerOpts.Options.EnableJsonIgnoreAttributesOnRequiredProps();
@@ -123,6 +125,14 @@ public static class MainExtensions
 
             if (def.AntiforgeryEnabled && (app.ServiceProvider.GetService<IAntiforgery>() is null || AntiforgeryMiddleware.IsRegistered is false))
                 throw new InvalidOperationException("AntiForgery middleware setup is incorrect!");
+
+            if (inspectReflectionCache && Cfg.BndOpts.ReflectionCache.TryGetValue(def.EndpointType, out var classDef))
+            {
+                if (classDef.EndpointIsImplicitlyReturningError)
+                {
+                    def.ImplicitErrorSending = true;
+                }
+            }
 
             AddSecurityPolicy(authOptions, def);
 

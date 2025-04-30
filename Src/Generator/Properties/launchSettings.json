@@ -7,6 +7,10 @@
     "GeneratorSandbox": {
       "commandName": "DebugRoslynComponent",
       "targetProject": "..\\..\\Sandbox\\Source\\Sandbox.csproj"
+    },
+    "GeneratorBC": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "../../../../BC.Formations/BC.Formations.Api/BC.Formations.Api.csproj"
     }
   }
 }

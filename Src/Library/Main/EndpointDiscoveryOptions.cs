@@ -49,4 +49,10 @@ public sealed class EndpointDiscoveryOptions
     /// alternatively you can annotate the type/class with the <see cref="DontRegisterAttribute" /> to skip auto registration for that type.
     /// </summary>
     public Func<Type, bool>? Filter { internal get; set; }
+    
+    /// <summary>
+    /// set to true if you want FastEndpoints to implicitly detect the sending of errors and output appropriate Swagger metadata.
+    /// <para>NOTE: this may result in a startup performance hit for large projects, it's recommended to use FastEndpoints.Generator instead</para>
+    /// </summary>
+    public bool EnableReflectionImplicitErrorDetection { get; set; }
 }
