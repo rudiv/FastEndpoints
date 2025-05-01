@@ -279,7 +279,14 @@ public class ReflectionGenerator : IIncrementalGenerator
             IsValueType = type.IsValueType;
 
             if (TypeBlacklist.Contains(UnderlyingTypeName))
+            {
+                if (isEndpoint)
+                {
+                    // Still analyse the endpoint
+                    _ = new TypeInfo(ref collector, semanticModel, symbol: symbol, isEndpoint: false, noRecursion: true);
+                }
                 return;
+            }
 
             if (collector.CollectedTypes.Contains(this)) //need to have TypeName set before this
                 return;
@@ -357,36 +364,10 @@ public class ReflectionGenerator : IIncrementalGenerator
                             // Endpoint being analysed directly
                             if (!isEndpoint && noRecursion)
                             {
-                                if (method.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() is MethodDeclarationSyntax syntax)
+                                var hasErrorInvocation = CheckForImplicitErrorSendingInvocation(method, semanticModel);
+                                if (hasErrorInvocation)
                                 {
-                                    var methodBody = syntax.Body ?? 
-                                                     (syntax.ExpressionBody?.Expression.GetLocation().SourceTree?.GetRoot() as CSharpSyntaxNode);
-                                    
-                                    if (methodBody != null)
-                                    {
-                                        var hasErrorInvocation = methodBody.DescendantNodes()
-                                                                    .OfType<InvocationExpressionSyntax>()
-                                                                    .Where(i => {
-                                                                        var name = i.Expression.ToString();
-
-                                                                        // Name check first for quick exit without invoking the SemanticModel
-                                                                        if (!ImplicitErrorSending.Contains(name))
-                                                                        {
-                                                                            return false;
-                                                                        }
-                                                                        
-                                                                        // Just confirming that this is the right method.
-                                                                        var symbolInfo = ModelExtensions.GetSymbolInfo(semanticModel, i.Expression);
-                                                                        if (symbolInfo.Symbol is not IMethodSymbol methodSymbol) return false;
-                                                                        var namespaceName = methodSymbol.ContainingNamespace.ToDisplayString();
-                                                                        return namespaceName == "FastEndpoints";
-                                                                    }).Any(); // Any for fast return on first
-                                        
-                                        if (hasErrorInvocation)
-                                        {
-                                            IsEndpointImplicitError = true;
-                                        }
-                                    }
+                                    IsEndpointImplicitError = true;
                                 }
                             }
                             break;
@@ -427,6 +408,56 @@ public class ReflectionGenerator : IIncrementalGenerator
                 TypeAlias = $"t{(collector.Counter++).ToString()}";
                 collector.CollectedTypes.Add(this);
             }
+        }
+
+        private bool CheckForImplicitErrorSendingInvocation(IMethodSymbol symbol, SemanticModel semanticModel, int level = 0)
+        {
+            if (!(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() is MethodDeclarationSyntax syntax))
+                return false;
+
+            var node = syntax.Body ??
+                       syntax.ExpressionBody ??
+                       (syntax.ExpressionBody?.Expression.GetLocation().SourceTree?.GetRoot() as CSharpSyntaxNode);
+
+            if (node == null)
+                return false;
+
+            // Check for direct invocations of error methods
+            var directInvocations = node.DescendantNodes()
+                                       .OfType<InvocationExpressionSyntax>()
+                                       .Where(i => {
+                                           var name = (i.Expression as MemberAccessExpressionSyntax)?.Name.ToString() ?? i.Expression.ToString();
+
+                                           // Name check first for quick exit without invoking the SemanticModel
+                                           if (!ImplicitErrorSending.Contains(name))
+                                           {
+                                               return false;
+                                           }
+                                           
+                                           // Just confirming that this is the right method.
+                                           var symbolInfo = ModelExtensions.GetSymbolInfo(semanticModel, i.Expression);
+                                           if (symbolInfo.Symbol is not IMethodSymbol methodSymbol) return false;
+                                           var namespaceName = methodSymbol.ContainingNamespace.ToDisplayString();
+                                           return namespaceName == "FastEndpoints";
+                                       }).Any();
+
+            if (directInvocations)
+                return true;
+
+            if (level < 2)
+            {
+                foreach (var invocation in node.DescendantNodes().OfType<InvocationExpressionSyntax>())
+                {
+                    var symbolInfo = ModelExtensions.GetSymbolInfo(semanticModel, invocation.Expression);
+
+                    if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
+                        continue;
+
+                    return CheckForImplicitErrorSendingInvocation(methodSymbol, semanticModel, ++level);
+                }
+            }
+
+            return false;
         }
 
         static bool HasDontInjectAttribute(IPropertySymbol prop)

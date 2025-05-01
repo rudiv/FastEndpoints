@@ -4166,6 +4166,37 @@
         }
       }
     },
+    "/api/implicit-error-nesting/a": {
+      "get": {
+        "tags": [
+          "ImplicitErrorNesting"
+        ],
+        "operationId": "TestCasesSwaggerImplicitErrorNestingEndpointA",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastEndpointsErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWTBearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/test-cases/typed-header-binding-test": {
       "post": {
         "tags": [
