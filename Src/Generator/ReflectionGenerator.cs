@@ -448,12 +448,16 @@ public class ReflectionGenerator : IIncrementalGenerator
             {
                 foreach (var invocation in node.DescendantNodes().OfType<InvocationExpressionSyntax>())
                 {
-                    var symbolInfo = ModelExtensions.GetSymbolInfo(semanticModel, invocation.Expression);
+                    try
+                    {
+                        var symbolInfo = ModelExtensions.GetSymbolInfo(semanticModel, invocation.Expression);
 
-                    if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
-                        continue;
+                        if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
+                            continue;
 
-                    return CheckForImplicitErrorSendingInvocation(methodSymbol, semanticModel, ++level);
+                        return CheckForImplicitErrorSendingInvocation(methodSymbol, semanticModel, ++level);
+                    }
+                    catch { /* Explicitly unhandled, caused by evaluating more user code that can jump everywhere */ }
                 }
             }
 
