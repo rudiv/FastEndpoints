@@ -124,6 +124,9 @@ public static class MainExtensions
             if (def.AntiforgeryEnabled && (app.ServiceProvider.GetService<IAntiforgery>() is null || AntiforgeryMiddleware.IsRegistered is false))
                 throw new InvalidOperationException("AntiForgery middleware setup is incorrect!");
 
+            def.ImplicitErrorSending = Cfg.BndOpts.ReflectionCache.TryGetValue(def.EndpointType, out var classDef) &&
+                                       classDef.EndpointIsImplicitlyReturningError;
+
             AddSecurityPolicy(authOptions, def);
 
             var routeNum = 0;
@@ -395,7 +398,7 @@ public static class MainExtensions
         if (ep.RequiresAuthorization())
             b.ProducesDeDuped(403, Types.Void, []);
 
-        if (Cfg.ErrOpts.ProducesMetadataType is not null && ep.ValidatorType is not null)
+        if (Cfg.ErrOpts.ProducesMetadataType is not null && (ep.ValidatorType is not null || ep.ImplicitErrorSending))
             b.ProducesDeDuped(Cfg.ErrOpts.StatusCode, Cfg.ErrOpts.ProducesMetadataType, [Cfg.ErrOpts.ContentType]);
     }
 

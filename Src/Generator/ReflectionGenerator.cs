@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
@@ -11,6 +12,7 @@ public class ReflectionGenerator : IIncrementalGenerator
 {
     // ReSharper disable InconsistentNaming
     static readonly string[] TypeBlacklist = ["Microsoft.Extensions.Primitives.StringSegment", "FastEndpoints.EmptyRequest", "System.Uri"];
+    static readonly string[] ImplicitErrorSending = ["SendErrorsAsync", "ThrowError", "ThrowIfAnyErrors"];
     const string ConditionArgument = "Condition";
     const string DontInjectAttribute = "DontInjectAttribute";
     const string DontRegisterAttribute = "DontRegisterAttribute";
@@ -46,13 +48,14 @@ public class ReflectionGenerator : IIncrementalGenerator
         {
             //should be re-assigned on every call. do not cache!
             _assemblyName = ctx.SemanticModel.Compilation.AssemblyName;
+            var semanticModel = ctx.SemanticModel;
 
             return ctx.SemanticModel.GetDeclaredSymbol(ctx.Node) is not ITypeSymbol type ||
                    type.IsAbstract ||
                    type.GetAttributes().Any(a => a.AttributeClass!.Name == DontRegisterAttribute || type.AllInterfaces.Length == 0)
                        ? null
                        : type.AllInterfaces.Any(i => i.ToDisplayString() == IEndpoint) //must be an endpoint
-                           ? new TypeInfo(ref _collector, type, true)
+                           ? new TypeInfo(ref _collector, semanticModel, type, true)
                            : null;
         }
     }
@@ -162,8 +165,17 @@ public class ReflectionGenerator : IIncrementalGenerator
                 b.w(
                     """
                     
-                                    ])
+                                    ]),
                     """);
+            }
+            
+            if (tInfo.IsEndpointImplicitError == true)
+            {
+                b.w(
+                    $"""
+
+                                     EndpointIsImplicitlyReturningError = true,
+                     """);
             }
 
             b.w(
@@ -229,9 +241,10 @@ public class ReflectionGenerator : IIncrementalGenerator
         public bool SkipObjectFactory { get; }
         public bool? IsParsable { get; }
         public int CtorArgumentCount { get; }
+        public bool? IsEndpointImplicitError { get; }
         public IEnumerable<string> RequiredProps => Properties.Where(p => p.IsRequired).Select(p => p.PropName);
 
-        public TypeInfo(ref TypeCollector collector, ITypeSymbol symbol, bool isEndpoint, bool noRecursion = false)
+        public TypeInfo(ref TypeCollector collector, SemanticModel semanticModel, ITypeSymbol symbol, bool isEndpoint, bool noRecursion = false)
         {
             if (symbol.IsAbstract || symbol.TypeKind == TypeKind.Enum || symbol.TypeKind == TypeKind.Interface)
                 return;
@@ -283,7 +296,7 @@ public class ReflectionGenerator : IIncrementalGenerator
                     };
 
                     if (tElement is not null)
-                        _ = new TypeInfo(ref collector, tElement, false);
+                        _ = new TypeInfo(ref collector, semanticModel, tElement, false);
 
                     return;
                 }
@@ -339,6 +352,44 @@ public class ReflectionGenerator : IIncrementalGenerator
                             Properties.Add(new(prop));
 
                             break;
+                        case IMethodSymbol method when method.Name is "HandleAsync" or "ExecuteAsync" &&
+                                                       method.DeclaredAccessibility == Accessibility.Public:
+                            // Endpoint being analysed directly
+                            if (!isEndpoint && noRecursion)
+                            {
+                                if (method.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() is MethodDeclarationSyntax syntax)
+                                {
+                                    var methodBody = syntax.Body ?? 
+                                                     (syntax.ExpressionBody?.Expression.GetLocation().SourceTree?.GetRoot() as CSharpSyntaxNode);
+                                    
+                                    if (methodBody != null)
+                                    {
+                                        var hasErrorInvocation = methodBody.DescendantNodes()
+                                                                    .OfType<InvocationExpressionSyntax>()
+                                                                    .Where(i => {
+                                                                        var name = i.Expression.ToString();
+
+                                                                        // Name check first for quick exit without invoking the SemanticModel
+                                                                        if (!ImplicitErrorSending.Contains(name))
+                                                                        {
+                                                                            return false;
+                                                                        }
+                                                                        
+                                                                        // Just confirming that this is the right method.
+                                                                        var symbolInfo = ModelExtensions.GetSymbolInfo(semanticModel, i.Expression);
+                                                                        if (symbolInfo.Symbol is not IMethodSymbol methodSymbol) return false;
+                                                                        var namespaceName = methodSymbol.ContainingNamespace.ToDisplayString();
+                                                                        return namespaceName == "FastEndpoints";
+                                                                    }).Any(); // Any for fast return on first
+                                        
+                                        if (hasErrorInvocation)
+                                        {
+                                            IsEndpointImplicitError = true;
+                                        }
+                                    }
+                                }
+                            }
+                            break;
                     }
                 }
                 ctorSearchComplete = true;
@@ -362,15 +413,15 @@ public class ReflectionGenerator : IIncrementalGenerator
                 if (!noRecursion)
                 {
                     foreach (var p in Properties)
-                        _ = new TypeInfo(ref collector, p.Symbol, false);
+                        _ = new TypeInfo(ref collector, semanticModel, p.Symbol, false);
                 }
             }
 
-            if (isEndpoint && Properties.Count > 0) //create entry for endpoint class to support property injection
-                _ = new TypeInfo(ref collector, symbol: symbol, isEndpoint: false, noRecursion: true); //process the endpoint as a regular class without recursion
+            if (isEndpoint) //create entry for endpoint class to support property injection and implicit error sending
+                _ = new TypeInfo(ref collector, semanticModel, symbol: symbol, isEndpoint: false, noRecursion: true); //process the endpoint as a regular class without recursion
             else
             {
-                if (noRecursion) // noRecursion is only true for endpoint classes when treated as regular classes by if condition above
+                if (noRecursion && IsEndpointImplicitError is null) // noRecursion is only true for endpoint classes when treated as regular classes by if condition above
                     return;
 
                 TypeAlias = $"t{(collector.Counter++).ToString()}";

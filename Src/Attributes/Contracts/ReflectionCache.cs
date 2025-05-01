@@ -30,6 +30,11 @@ public sealed class TypeDefinition
     /// a func used for converting string values to the respective type by calling it's <c>TryParse()</c> method.
     /// </summary>
     public Func<StringValues, ParseResult>? ValueParser { get; set; }
+    
+    /// <summary>
+    /// set to true if this is an endpoint that implicitly returns an error response in <c>HandleAsync</c> or <c>ExecuteAsync</c>.
+    /// </summary>
+    public bool EndpointIsImplicitlyReturningError { get; set; }
 }
 
 /// <summary>
