@@ -7,7 +7,7 @@ namespace FastEndpoints;
 
 static class RequestHandler
 {
-    internal static Task Invoke(HttpContext ctx, IEndpointFactory epFactory)
+    internal static Task<object?> Invoke(HttpContext ctx, IEndpointFactory epFactory)
     {
         var epDef = ((IEndpointFeature)ctx.Features[Types.IEndpointFeature]!).Endpoint!.Metadata.GetMetadata<EndpointDefinition>()!;
 
@@ -23,7 +23,8 @@ static class RequestHandler
                 {
                     ctx.Response.StatusCode = 403;
 
-                    return ctx.Response.WriteAsync("Forbidden by rate limiting middleware!", ctx.RequestAborted);
+                    return ctx.Response.WriteAsync("Forbidden by rate limiting middleware!", ctx.RequestAborted)
+                              .ContinueWith(object? (t) => null);
                 }
             }
 
@@ -31,7 +32,8 @@ static class RequestHandler
             {
                 ctx.Response.StatusCode = 429;
 
-                return ctx.Response.WriteAsync(ThrOpts.Message ?? "You are requesting this endpoint too frequently!", ctx.RequestAborted);
+                return ctx.Response.WriteAsync(ThrOpts.Message ?? "You are requesting this endpoint too frequently!", ctx.RequestAborted)
+                          .ContinueWith(object? (t) => null);;
             }
         }
 
@@ -47,7 +49,8 @@ static class RequestHandler
 
             ctx.Response.StatusCode = 415;
 
-            return ctx.Response.StartAsync(ctx.RequestAborted);
+            return ctx.Response.StartAsync(ctx.RequestAborted)
+                      .ContinueWith(object? (t) => null);;
         }
 
         var epInstance = epFactory.Create(epDef, ctx);
@@ -64,6 +67,7 @@ static class RequestHandler
 
         ResponseCacheExecutor.Execute(ctx, epDef.ResponseCacheSettings);
 
-        return epInstance.ExecAsync(ctx.RequestAborted);
+        return epInstance.ExecAsync(ctx.RequestAborted)
+                         .ContinueWith((t) => (ctx.Items.TryGetValue("FastEndpointsResponse", out var item)) ? item : null);
     }
 }
