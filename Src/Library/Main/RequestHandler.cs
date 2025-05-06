@@ -33,7 +33,7 @@ static class RequestHandler
                 ctx.Response.StatusCode = 429;
 
                 return ctx.Response.WriteAsync(ThrOpts.Message ?? "You are requesting this endpoint too frequently!", ctx.RequestAborted)
-                          .ContinueWith(object? (t) => null);;
+                          .ContinueWith(object? (t) => null);
             }
         }
 
@@ -50,7 +50,7 @@ static class RequestHandler
             ctx.Response.StatusCode = 415;
 
             return ctx.Response.StartAsync(ctx.RequestAborted)
-                      .ContinueWith(object? (t) => null);;
+                      .ContinueWith(object? (t) => null);
         }
 
         var epInstance = epFactory.Create(epDef, ctx);
